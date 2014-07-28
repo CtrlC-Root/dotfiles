@@ -6,8 +6,10 @@ if [ -f /etc/bashrc ]; then
 fi
 
 # configure git user name and email
-git config --global user.name "Alexandru Barbur"
-git config --global user.email "root.ctrlc@gmail.com"
+if [ ! -f ~/.gitconfig ]; then
+    git config --global user.name "Alexandru Barbur"
+    git config --global user.email "root.ctrlc@gmail.com"
+fi
 
 # enable python virtualenvwrapper
 if [ -x "/usr/bin/virtualenvwrapper.sh" ]; then

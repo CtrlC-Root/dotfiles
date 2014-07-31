@@ -1,5 +1,6 @@
 # vim file history
 .vim/.netrwhist
 
-# desktop effects
+# local configuration
+.config/Trolltech.conf
 .config/compiz

@@ -16,5 +16,9 @@ if [ -x "/usr/bin/virtualenvwrapper.sh" ]; then
     . /usr/bin/virtualenvwrapper.sh
 fi
 
+# golang
+export GOROOT=$HOME/go
+export PATH=$PATH:$GOROOT/bin
+
 # user binaries
 export PATH=$PATH:$HOME/bin

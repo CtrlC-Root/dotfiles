@@ -14,4 +14,12 @@ setlocal commentstring=//\ %s
 
 let b:undo_ftplugin = "setl com< cms<"
 
+" use a tab width of 4 spaces
+set shiftwidth=4
+set tabstop=4
+
+" use tabs instead of spaces
+set noexpandtab
+set smarttab
+
 " vim:ts=4:sw=4:et

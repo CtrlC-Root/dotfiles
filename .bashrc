@@ -9,6 +9,7 @@ fi
 if [ ! -f ~/.gitconfig ]; then
     git config --global user.name "Alexandru Barbur"
     git config --global user.email "root.ctrlc@gmail.com"
+    git config --global color.ui auto
 fi
 
 # enable python virtualenvwrapper

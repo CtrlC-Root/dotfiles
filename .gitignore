@@ -1,6 +1,11 @@
 # vim file history
 .vim/.netrwhist
 
+# fish
+.config/fish/fish_history
+.config/fish/fish_read_history
+.config/fish/fishd*
+
 # local configuration
 .config/Trolltech.conf
 .config/compiz

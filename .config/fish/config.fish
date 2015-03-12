@@ -33,11 +33,11 @@ function --on-variable PWD auto_gitconfig
     set -g -e GIT_CONFIG
 end
 
-# golang
-set GOPATH $HOME/go
-if test -d "$GOPATH/bin"
-    set PATH $PATH $GOPATH/bin
-end
+# virtualfish
+source $HOME/.config/fish/virtualfish/virtual.fish
+
+# user binaries
+set PATH $PATH $HOME/bin
 
 # brew
 if which brew >/dev/null
@@ -45,11 +45,18 @@ if which brew >/dev/null
     set PATH (brew --prefix)/bin (brew --prefix)/sbin $PATH
 end
 
-# user binaries
-set PATH $PATH $HOME/bin
+# golang
+set GOPATH $HOME/go
+if test -d "$GOPATH/bin"
+    set PATH $PATH $GOPATH/bin
+end
 
-# virtualfish
-source $HOME/.config/fish/virtualfish/virtual.fish
+# boot2docker
+if which boot2docker >/dev/null
+    if boot2docker status | grep running >/dev/null
+        boot2docker shellinit | source -
+    end
+end
 
 # prompt
 function fish_prompt --description 'Write out the prompt'

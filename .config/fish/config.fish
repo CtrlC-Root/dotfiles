@@ -36,9 +36,6 @@ end
 # virtualfish
 source $HOME/.config/fish/virtualfish/virtual.fish
 
-# user binaries
-set PATH $PATH $HOME/bin
-
 # brew
 if which brew >/dev/null
     set -x ARCHFLAGS "-arch x86_64"
@@ -57,6 +54,9 @@ if which boot2docker >/dev/null
         boot2docker shellinit | source -
     end
 end
+
+# user binaries
+set PATH $PATH $HOME/bin
 
 # prompt
 function fish_prompt --description 'Write out the prompt'

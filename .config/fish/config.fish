@@ -42,6 +42,11 @@ if which brew >/dev/null
     set PATH (brew --prefix)/bin (brew --prefix)/sbin $PATH
 end
 
+# rbenv
+if which rbenv >/dev/null
+    source (rbenv init -|psub)
+end
+
 # golang
 set GOPATH $HOME/go
 if test -d "$GOPATH/bin"

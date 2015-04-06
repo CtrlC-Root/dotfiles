@@ -37,13 +37,13 @@ end
 source $HOME/.config/fish/virtualfish/virtual.fish
 
 # brew
-if which brew &>/dev/null
+if which brew >/dev/null
     set -x ARCHFLAGS "-arch x86_64"
     set PATH (brew --prefix)/bin (brew --prefix)/sbin $PATH
 end
 
 # rbenv
-if which rbenv &>/dev/null
+if which rbenv >/dev/null
     source (rbenv init -|psub)
 end
 
@@ -54,7 +54,7 @@ if test -d "$GOPATH/bin"
 end
 
 # boot2docker
-if which boot2docker &>/dev/null
+if which boot2docker >/dev/null
     if boot2docker status | grep running >/dev/null
         boot2docker shellinit | source -
     end

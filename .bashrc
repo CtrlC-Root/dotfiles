@@ -19,13 +19,13 @@ if [ -x "/usr/bin/virtualenvwrapper.sh" ]; then
 fi
 
 # brew
-if which brew >/dev/null; then
+if which brew &>/dev/null; then
     export ARCHFLAGS="-arch x86_64"
     export PATH=$(brew --prefix)/bin:$(brew --prefix)/sbin:$PATH
 fi
 
 # rbenv
-if which rbenv >/dev/null; then
+if which rbenv &>/dev/null; then
     eval "$(rbenv init -)"
 fi
 
@@ -36,7 +36,7 @@ if [ -d "${GOPATH}/bin" ]; then
 fi
 
 # boot2docker
-#if which boot2docker >/dev/null; then
+#if which boot2docker &>/dev/null; then
 #    if boot2docker status | grep running >/dev/null; then
 #        eval "$(boot2docker shellinit)"
 #    fi

@@ -9,30 +9,6 @@ if test ! -f ~/.gitconfig
     git config --global color.ui auto
 end
 
-# automatically locate and use the first git configuration file in the
-# directory tree starting from the current working directory
-function --on-variable PWD auto_gitconfig
-    set -l CHECK $PWD
-    while test -n "$CHECK"
-        if test -f "$CHECK/.git/config"
-            set -g GIT_CONFIG "$CHECK/.git/config"
-            return
-        end
-
-        if test -f "$CHECK/.gitconfig"
-            set -g GIT_CONFIG "$CHECK/.gitconfig"
-            return
-        end
-
-        set -l CHECK (dirname $CHECK)
-        if test $CHECK = "/"
-            break
-        end
-    end
-
-    set -g -e GIT_CONFIG
-end
-
 # virtualfish
 source $HOME/.config/fish/virtualfish/virtual.fish
 

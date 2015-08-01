@@ -53,13 +53,6 @@ if test -d "$GOPATH/bin"
     set PATH $PATH $GOPATH/bin
 end
 
-# boot2docker
-if which boot2docker >/dev/null
-    if boot2docker status | grep running >/dev/null
-        boot2docker shellinit | source -
-    end
-end
-
 # user binaries
 set PATH $PATH $HOME/bin
 

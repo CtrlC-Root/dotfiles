@@ -35,12 +35,5 @@ if [ -d "${GOPATH}/bin" ]; then
     export PATH=$PATH:$GOPATH/bin
 fi
 
-# boot2docker
-#if which boot2docker &>/dev/null; then
-#    if boot2docker status | grep running >/dev/null; then
-#        eval "$(boot2docker shellinit)"
-#    fi
-#fi
-
 # user binaries
 export PATH=$PATH:$HOME/bin

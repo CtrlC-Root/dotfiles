@@ -18,11 +18,6 @@ if which brew >/dev/null
     set -x PATH (brew --prefix)/bin (brew --prefix)/sbin $PATH
 end
 
-# rbenv
-if which rbenv >/dev/null
-    source (rbenv init -|psub)
-end
-
 # golang
 set -x GOPATH $HOME/go
 if test -d "$GOPATH/bin"
@@ -32,42 +27,15 @@ end
 # user binaries
 set -x PATH $PATH $HOME/bin
 
-# prompt
-function fish_prompt --description 'Write out the prompt'
-    # resolve hostname
-    if not set -q __fish_prompt_hostname
-        set -g __fish_prompt_hostname (hostname|cut -d . -f 1)
-    end
+# powerline prompt
+if which pip >/dev/null
+    if pip list | grep powerline-status >/dev/null
+        # start the daemon in the background
+        powerline-daemon -q
 
-    # resolve normal color
-    if not set -q __fish_prompt_normal
-        set -g __fish_prompt_normal (set_color normal)
-    end
-
-    # display virtualenv
-    if set -q VIRTUAL_ENV
-        echo -n -s (set_color cyan) "(" (basename "$VIRTUAL_ENV") ")" (set_color normal) " "
-    end
-
-    # display user, hostname, and current directory
-    switch $USER
-    case root
-        if not set -q __fish_prompt_cwd
-            if set -q fish_color_cwd_root
-                set -g __fish_prompt_cwd (set_color $fish_color_cwd_root)
-            else
-                set -g __fish_prompt_cwd (set_color $fish_color_cwd)
-            end
-        end
-
-        echo -n -s "$USER" @ "$__fish_prompt_hostname" ' ' "$__fish_prompt_cwd" (prompt_pwd) "$__fish_prompt_normal" '# '
-
-    case '*'
-        if not set -q __fish_prompt_cwd
-            set -g __fish_prompt_cwd (set_color $fish_color_cwd)
-        end
-
-        echo -n -s "$USER" @ "$__fish_prompt_hostname" ' ' "$__fish_prompt_cwd" (prompt_pwd) "$__fish_prompt_normal" '> '
-
+        # configure the prompt
+        set POWERLINE_STATUS_ROOT (pip show powerline-status | awk '$1 == "Location:" { print $2; }')
+        set fish_function_path $fish_function_path "$POWERLINE_STATUS_ROOT/powerline/bindings/fish"
+        powerline-setup
     end
 end

@@ -24,11 +24,6 @@ if which brew &>/dev/null; then
     export PATH=$(brew --prefix)/bin:$(brew --prefix)/sbin:$PATH
 fi
 
-# rbenv
-if which rbenv &>/dev/null; then
-    eval "$(rbenv init -)"
-fi
-
 # golang
 export GOPATH=$HOME/go
 if [ -d "${GOPATH}/bin" ]; then

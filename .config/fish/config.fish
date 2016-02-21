@@ -15,7 +15,7 @@ source $HOME/.config/fish/virtualfish/virtual.fish
 # brew
 if which brew >/dev/null
     set -x ARCHFLAGS "-arch x86_64"
-    set PATH (brew --prefix)/bin (brew --prefix)/sbin $PATH
+    set -x PATH (brew --prefix)/bin (brew --prefix)/sbin $PATH
 end
 
 # rbenv
@@ -24,13 +24,13 @@ if which rbenv >/dev/null
 end
 
 # golang
-set GOPATH $HOME/go
+set -x GOPATH $HOME/go
 if test -d "$GOPATH/bin"
-    set PATH $PATH $GOPATH/bin
+    set -x PATH $PATH $GOPATH/bin
 end
 
 # user binaries
-set PATH $PATH $HOME/bin
+set -x PATH $PATH $HOME/bin
 
 # prompt
 function fish_prompt --description 'Write out the prompt'

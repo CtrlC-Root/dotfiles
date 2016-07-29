@@ -13,7 +13,7 @@ end
 source $HOME/.config/fish/virtualfish/virtual.fish
 
 # brew
-if which brew >/dev/null
+if which brew 2> /dev/null
     set -x ARCHFLAGS "-arch x86_64"
     set -x PATH (brew --prefix)/bin $PATH
 end
@@ -30,7 +30,7 @@ if test -d "$HOME/bin"
 end
 
 # powerline prompt
-if which pip >/dev/null
+if which pip 2> /dev/null
     if pip list | grep powerline-status >/dev/null
         # start the daemon in the background
         powerline-daemon -q

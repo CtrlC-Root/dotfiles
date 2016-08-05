@@ -15,7 +15,7 @@ source $HOME/.config/fish/virtualfish/virtual.fish
 # brew
 if which brew >/dev/null
     set -x ARCHFLAGS "-arch x86_64"
-    set -x PATH (brew --prefix)/bin $PATH
+    set -x PATH (brew --prefix)/bin (brew --prefix)/sbin $PATH
 end
 
 # golang

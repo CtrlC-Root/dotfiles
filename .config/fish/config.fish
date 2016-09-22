@@ -10,7 +10,11 @@ if test ! -f ~/.gitconfig
 end
 
 # virtualfish
-source $HOME/.config/fish/virtualfish/virtual.fish
+if which pip > /dev/null ^&1
+    if pip list | grep virtualfish > /dev/null
+        eval (python -m virtualfish)
+    end
+end
 
 # brew
 if which brew > /dev/null ^&1
@@ -31,7 +35,7 @@ end
 
 # powerline prompt
 if which pip > /dev/null ^&1
-    if pip list | grep powerline-status >/dev/null
+    if pip list | grep powerline-status > /dev/null
         # start the daemon in the background
         powerline-daemon -q
 

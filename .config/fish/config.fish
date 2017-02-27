@@ -1,6 +1,3 @@
-# aliases
-alias tmux "tmux -2"
-
 # configure git settings
 if test ! -f ~/.gitconfig
     git config --global user.name "Alexandru Barbur"

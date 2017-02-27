@@ -31,4 +31,6 @@ if [ -d "${GOPATH}/bin" ]; then
 fi
 
 # user binaries
-export PATH=$PATH:$HOME/bin
+if [ -d "$HOME/bin" ]; then
+    export PATH=$PATH:$HOME/bin
+fi

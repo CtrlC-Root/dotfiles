@@ -30,7 +30,14 @@ if test -d "$HOME/bin"
     set -x PATH $PATH $HOME/bin
 end
 
-# powerline prompt
+# gpg agent
+if which gpg-agent > /dev/null ^&1
+    if not set -q GPG_AGENT_INFO
+        eval (gpg-agent --daemon | sed -e "s/\(.*\)=\(.*\); export/set -x \1 \2/")
+    end
+end
+
+# powerline status
 if which pip > /dev/null ^&1
     if pip list --format=legacy | grep powerline-status > /dev/null
         # start the daemon in the background

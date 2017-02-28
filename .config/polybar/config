@@ -55,14 +55,14 @@ height = 24
 font-0 = "DejaVu Sans Mono:size=11;0"
 font-1 = "MaterialIcons:size=11;0"
 
+; layout
+fixed-center = true
+module-margin = 1
+padding = 2
+
 ; colors
 background = ${colors.bg-primary}
 foreground = ${colors.fg-text}
-
-; layout
-fixed-center = true
-padding = 2
-module-margin = 1
 
 ; modules
 modules-left = i3
@@ -97,7 +97,7 @@ wrapping-scroll = true
 [module/volume]
 type = internal/volume
 
-format-volume = <ramp-volume> <label-volume>
+format-volume = <ramp-volume><label-volume>
 ramp-volume-0 = ${icons.volume-low}
 ramp-volume-1 = ${icons.volume-medium}
 ramp-volume-2 = ${icons.volume-high}

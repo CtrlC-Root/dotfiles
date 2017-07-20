@@ -9,10 +9,29 @@ if test ! -f ~/.gitconfig
     git config --global color.ui auto
 end
 
+# detect python tools
+set -l python_tools 'python3 pip3' 'python2 pip2' 'python pip'
+for tools in $python_tools
+	# locate toolset binaries
+	set -l binaries
+	for binary in (echo $tools | tr ' ' '\n')
+		if which $binary > /dev/null ^&1
+			set binaries $binaries $binary
+		end
+	end
+
+	# use this toolset if all binaries are available
+	if test (count $binaries) -ge 2
+		set ctrlc_python $binaries[1]
+		set ctrlc_pip $binaries[2]
+		break
+	end
+end
+
 # virtualfish
-if which pip > /dev/null ^&1
-    if pip list --format=legacy | grep virtualfish > /dev/null
-        eval (python -m virtualfish)
+if set -q ctrlc_python ctrlc_pip
+    if eval $ctrlc_pip list --format=legacy | grep virtualfish > /dev/null
+        eval (eval $ctrlc_python -m virtualfish)
     end
 end
 
@@ -34,13 +53,13 @@ if test -d "$HOME/bin"
 end
 
 # powerline prompt
-if which pip > /dev/null ^&1
-    if pip list --format=legacy | grep powerline-status > /dev/null
+if set -q ctrlc_python ctrlc_pip
+    if eval $ctrlc_pip list --format=legacy | grep powerline-status > /dev/null
         # start the daemon in the background
         powerline-daemon -q
 
         # configure the prompt
-        set POWERLINE_STATUS_ROOT (pip show powerline-status | awk '$1 == "Location:" { print $2; }')
+        set POWERLINE_STATUS_ROOT (eval $ctrlc_pip show powerline-status | awk '$1 == "Location:" { print $2; }')
         set fish_function_path $fish_function_path "$POWERLINE_STATUS_ROOT/powerline/bindings/fish"
         powerline-setup
     end

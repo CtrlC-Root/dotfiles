@@ -1,0 +1,168 @@
+; polybar configuration
+
+;
+; colors and icons
+;
+
+[colors]
+fg-text = #ddd
+fg-ta = #8f8
+fg-tb = #8ff
+fg-tc = #88f
+fg-td = #f88
+fg-te = #ff8
+
+bg-primary = #222
+bg-secondary = #888
+
+[icons]
+; volume module
+volume-low = " "
+volume-medium = " "
+volume-high = " "
+volume-muted = " "
+
+; filesystem module
+disk = " "
+
+; memory module
+memory = " "
+
+; cpu module
+cpu = " "
+
+; network module
+network-disconnected = " "
+network-connected = " "
+
+;wifi-disconnected = " "
+;wifi-connected-public = " "
+;wifi-connected-private = " "
+
+; date module
+date-calendar = " "
+date-clock = " "
+
+;
+; bars
+;
+
+[bar/common]
+width = 100%
+height = 24
+
+; load one font for text and one for icons
+font-0 = "DejaVu Sans Mono:size=11;0"
+font-1 = "MaterialIcons:size=11;0"
+
+; layout
+fixed-center = true
+module-margin = 1
+padding = 2
+
+; colors
+background = ${colors.bg-primary}
+foreground = ${colors.fg-text}
+
+; modules
+modules-left = i3
+modules-center =
+modules-right = volume filesystem memory cpu date
+
+; tray
+tray-position = right
+
+[bar/desktop]
+inherit = bar/common
+
+; modules
+modules-right = volume filesystem memory cpu net-eno1 date
+
+;
+; modules
+;
+
+; i3 window manager
+[module/i3]
+type = internal/i3
+
+pin-workspaces = true
+index-sort = true
+
+enable-click = true
+enable-scroll = true
+wrapping-scroll = true
+
+; volume
+[module/volume]
+type = internal/volume
+
+format-volume = <ramp-volume><label-volume>
+ramp-volume-0 = ${icons.volume-low}
+ramp-volume-1 = ${icons.volume-medium}
+ramp-volume-2 = ${icons.volume-high}
+label-volume = %percentage%%
+
+format-muted-prefix = ${icons.volume-muted}
+label-muted = muted
+
+; filesystem
+[module/filesystem]
+type = internal/fs
+interval = 30
+
+mount-0 = /
+
+format-mounted-prefix = ${icons.disk}
+label-mounted = %mountpoint%: %percentage_used%%
+
+format-unmounted-prefix = ${icons.disk}
+label-unmounted = %mountpoint%: not mounted
+
+; memory
+[module/memory]
+type = internal/memory
+interval = 2
+
+format-prefix = ${icons.memory}
+label = %percentage_used%%
+
+; cpu
+[module/cpu]
+type = internal/cpu
+interval = 2
+
+format-prefix = ${icons.cpu}
+label = %percentage%%
+
+; network
+[module/network]
+type = internal/network
+interval = 2
+
+format-connected-prefix = ${icons.network-connected}
+format-connected = <label-connected>
+label-connected = %local_ip%
+
+format-disconnected-prefix = ${icons.network-disconnected}
+format-disconnected = <label-disconnected>
+label-disconnected = %ifname% disconnected
+
+[module/net-eno1]
+inherit = module/network
+interface = eno1
+
+; date
+[module/date]
+type = internal/date
+interval = 1
+
+format-prefix = ${icons.date-clock}
+format = <label>
+label = %date%%time%
+
+time = %H:%M
+
+date-alt = %Y-%m-%d
+time-alt = " %H:%M:%S"
+

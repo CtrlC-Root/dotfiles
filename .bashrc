@@ -31,4 +31,19 @@ if [ -d "${GOPATH}/bin" ]; then
 fi
 
 # user binaries
-export PATH=$PATH:$HOME/bin
+if [ -d "$HOME/bin" ]; then
+    export PATH=$PATH:$HOME/bin
+fi
+
+# gpg agent
+if which gpg-agent &>/dev/null; then
+    if [ -z "${GPG_AGENT_INFO+x}" ]; then
+        eval (gpg-agent --daemon)
+    fi
+fi
+
+# powerline status, but do I want this?
+#powerline-daemon -q
+#POWERLINE_BASH_CONTINUATION=1
+#POWERLINE_BASH_SELECT=1
+#source $POWERLINE_STATUS_ROOT/powerline/bindings/bash/powerline.sh

@@ -27,7 +27,7 @@ end
 
 # virtualfish
 if set -q ctrlc_python ctrlc_pip
-    if eval $ctrlc_pip list --format=legacy | grep virtualfish > /dev/null
+    if eval $ctrlc_pip list | grep virtualfish > /dev/null
         eval (eval $ctrlc_python -m virtualfish)
     end
 end
@@ -51,7 +51,7 @@ end
 
 # powerline prompt
 if set -q ctrlc_python ctrlc_pip
-    if eval $ctrlc_pip list --format=legacy | grep powerline-status > /dev/null
+    if eval $ctrlc_pip list | grep powerline-status > /dev/null
         # start the daemon in the background
         powerline-daemon -q
 

@@ -36,6 +36,7 @@ end
 if which brew > /dev/null ^&1
     set -x ARCHFLAGS "-arch x86_64"
     set -x PATH (brew --prefix)/bin (brew --prefix)/sbin $PATH
+    set -x HOMEBREW_NO_ANALYTICS 1
 end
 
 # golang

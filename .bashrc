@@ -22,6 +22,7 @@ fi
 if which brew &>/dev/null; then
     export ARCHFLAGS="-arch x86_64"
     export PATH=$(brew --prefix)/bin:$(brew --prefix)/sbin:$PATH
+    export HOMEBREW_NO_ANALYTICS=1
 fi
 
 # golang

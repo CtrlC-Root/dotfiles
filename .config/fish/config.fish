@@ -1,3 +1,12 @@
+# detect preferred editor
+set -l editors vim nano vi
+for editor in $editors
+	if which $editor > /dev/null ^&1
+		set -x EDITOR $editor
+		break
+	end
+end
+
 # configure git settings
 if test ! -f ~/.gitconfig
     git config --global user.name "Alexandru Barbur"

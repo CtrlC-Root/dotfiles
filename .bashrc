@@ -5,6 +5,15 @@ if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
 fi
 
+# detect preferred editor
+EDITORS='vim nano vi'
+for EDITOR in $EDITORS; do
+	if which "${EDITOR}" &>/dev/null; then
+		export EDITOR
+		break
+	fi
+done
+
 # configure git settings
 if [ ! -f ~/.gitconfig ]; then
     git config --global user.name "Alexandru Barbur"
@@ -34,13 +43,6 @@ fi
 # user binaries
 if [ -d "$HOME/bin" ]; then
     export PATH=$PATH:$HOME/bin
-fi
-
-# gpg agent
-if which gpg-agent &>/dev/null; then
-    if [ -z "${GPG_AGENT_INFO+x}" ]; then
-        eval (gpg-agent --daemon)
-    fi
 fi
 
 # powerline status, but do I want this?

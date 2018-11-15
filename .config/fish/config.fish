@@ -34,6 +34,16 @@ for tools in $python_tools
 	end
 end
 
+# user binaries
+if test -d "$HOME/bin"
+    set -x PATH $PATH $HOME/bin
+end
+
+# local binaries
+if test -d "$HOME/.local/bin"
+    set -x PATH $PATH $HOME/.local/bin
+end
+
 # virtualfish
 if set -q ctrlc_python ctrlc_pip
     if eval $ctrlc_pip list | grep virtualfish > /dev/null
@@ -52,11 +62,6 @@ end
 set -x GOPATH $HOME/go
 if test -d "$GOPATH/bin"
     set -x PATH $PATH $GOPATH/bin
-end
-
-# user binaries
-if test -d "$HOME/bin"
-    set -x PATH $PATH $HOME/bin
 end
 
 # powerline prompt

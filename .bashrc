@@ -22,6 +22,16 @@ if [ ! -f ~/.gitconfig ]; then
     git config --global color.ui auto
 fi
 
+# user binaries
+if [ -d "$HOME/bin" ]; then
+    export PATH=$PATH:$HOME/bin
+fi
+
+# local binaries
+if [ -d "$HOME/.local/bin" ]; then
+    export PATH=$PATH:$HOME/.local/bin
+fi
+
 # virtualenvwrapper
 if [ -x "/usr/bin/virtualenvwrapper.sh" ]; then
     . /usr/bin/virtualenvwrapper.sh
@@ -38,11 +48,6 @@ fi
 export GOPATH=$HOME/go
 if [ -d "${GOPATH}/bin" ]; then
     export PATH=$PATH:$GOPATH/bin
-fi
-
-# user binaries
-if [ -d "$HOME/bin" ]; then
-    export PATH=$PATH:$HOME/bin
 fi
 
 # powerline status, but do I want this?

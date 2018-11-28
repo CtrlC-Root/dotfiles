@@ -7,5 +7,6 @@
 .config/fish/fishd*
 
 # local configuration
+.config/KeePass
 .config/Trolltech.conf
 .config/compiz

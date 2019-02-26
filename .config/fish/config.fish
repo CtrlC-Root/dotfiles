@@ -37,10 +37,10 @@ end
 
 # configure git settings
 if test ! -f ~/.gitconfig
-    git config --global user.name "Alexandru Barbur"
-    git config --global user.email "root.ctrlc@gmail.com"
-    git config --global push.default simple
-    git config --global color.ui auto
+	git config --global user.name "Alexandru Barbur"
+	git config --global user.email "root.ctrlc@gmail.com"
+	git config --global push.default simple
+	git config --global color.ui auto
 end
 
 # detect python tools
@@ -69,12 +69,18 @@ end
 
 # user binaries
 if test -d "$HOME/bin"
-    set -x PATH $PATH $HOME/bin
+	set -x PATH $PATH $HOME/bin
 end
 
 # local binaries
 if test -d "$HOME/.local/bin"
-    set -x PATH $PATH $HOME/.local/bin
+	set -x PATH $PATH $HOME/.local/bin
+end
+
+# gpg
+if which gpg > /dev/null ^&1
+	# https://stackoverflow.com/a/41054093
+	set -x GPG_TTY (tty)
 end
 
 # virtualfish
@@ -132,4 +138,4 @@ end
 # record end time and display total load time
 set -l ctrlc_env_end (date '+%s')
 set -l ctrlc_env_delta (math "$ctrlc_env_end" - "$ctrlc_env_start")
-echo "env load time $ctrlc_env_delta seconds"
+echo "load time $ctrlc_env_delta seconds"

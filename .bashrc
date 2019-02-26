@@ -50,6 +50,12 @@ if [ -d "${GOPATH}/bin" ]; then
     export PATH=$PATH:$GOPATH/bin
 fi
 
+# gpg
+if which gpg &>/dev/null; then
+    # https://stackoverflow.com/a/41054093
+    export GPG_TTY=$(tty)
+fi
+
 # powerline status, but do I want this?
 #powerline-daemon -q
 #POWERLINE_BASH_CONTINUATION=1

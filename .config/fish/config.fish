@@ -29,7 +29,7 @@ if set -q ctrlc_env_update
 	set -l editors vim nano vi
 	for editor in $editors
 		if which $editor > /dev/null ^&1
-			set -U EDITOR $editor
+			set -U -x EDITOR $editor
 			break
 		end
 	end

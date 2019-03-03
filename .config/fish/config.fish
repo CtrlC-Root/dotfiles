@@ -6,7 +6,7 @@ set -l ctrlc_platform (uname)
 if test "$ctrlc_platform" = "Linux"
 	set ctrlc_last_boot (date -d (last reboot | head -n 1 | sed -e 's/ \+/ /g' | cut -d ' ' -f5-8) '+%s')
 else if test "$ctrlc_platform" = "Darwin"
-	set ctrlc_last_boot (date -d (last reboot | head -n 1 | sed -e 's/ \+/ /g' | cut -d ' ' -f3-6) '+%s')
+	set ctrlc_last_boot (date -jf '%a %b %d %H:%M' '+%s' (last reboot | head -n 1 | sed -e 's/  */ /g' | cut -d ' ' -f3-6))
 else
 	# force an update every time
 	echo "$ctrlc_platform unknown platform"

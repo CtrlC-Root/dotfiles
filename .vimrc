@@ -50,6 +50,9 @@ set tabstop=4
 set expandtab
 set smarttab
 
+" disable mouse input
+set mouse=
+
 " key bindings
 map [1;3D :tabprevious<CR>
 imap [1;3D <C-O>:tabprevious<CR>

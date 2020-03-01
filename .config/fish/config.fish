@@ -119,11 +119,12 @@ end
 function ctrlc_config_git
   argparse 'f/force' -- $argv; or return
 
-  # TODO: test on ~/.gitconfig or individual settings?
-  git config --global user.name "Alexandru Barbur"
-  git config --global user.email "alex@ctrlc.name"
-  git config --global push.default simple
-  git config --global color.ui auto
+  if not test -d "$HOME/.gitconfig" || set -q _flag_force
+    git config --global user.name "Alexandru Barbur"
+    git config --global user.email "alex@ctrlc.name"
+    git config --global push.default simple
+    git config --global color.ui auto
+  end
 end
 
 function ctrlc_config_gpg

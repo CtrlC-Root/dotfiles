@@ -9,5 +9,6 @@
 
 # local configuration
 .config/KeePass
+.config/Nextcloud
 .config/Trolltech.conf
 .config/compiz

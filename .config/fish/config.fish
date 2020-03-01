@@ -7,7 +7,7 @@ function ctrlc_last_boot --description "Detect last boot as unix time"
 
   case "Darwin"
     set last_boot (last reboot | head -n 1 | sed -e 's/  */ /g' | cut -d ' ' -f3-6)
-    set unix_time (date -jf '%a %b %d %H:%M' '+%s' $last_boot)
+    set unix_time (date -jf '%a %b %d %H:%M:%S' '+%s' $last_boot":00")
 
   case "*"
     set unix_time 0

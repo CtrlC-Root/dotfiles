@@ -234,9 +234,9 @@ function ctrlc_config
       set -l module_function "ctrlc_config_$module"
 
       eval $module_function $argv > /dev/null 2>&1
-      or ctrlc_module_disable -m $module && printf "!"
+      or ctrlc_module_disable -m $module && printf (set_color red)"!"(set_color normal)
     else
-      printf " -$module"
+      printf (set_color brblack)" -$module"(set_color normal)
     end
   end
 
@@ -253,7 +253,7 @@ end
 
 set -l last_boot (ctrlc_last_boot)
 if test $last_boot -gt $ctrlc_module_cache
-  printf "FB "
+  printf (set_color green)"FB "(set_color normal)
   ctrlc_config -f && set -U ctrlc_module_cache $last_boot
 else
   ctrlc_config

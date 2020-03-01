@@ -98,7 +98,7 @@ function ctrlc_config_editor
     return 0
   end
 
-  set -g -x EDITOR (ctrlc_detect_binaries vim nano vi)
+  set -U -x EDITOR (ctrlc_detect_binaries vim nano vi)
 end
 
 function ctrlc_config_brew --description "Homebrew"
@@ -107,11 +107,11 @@ function ctrlc_config_brew --description "Homebrew"
   if not set -q ctrlc_brew_prefix || set -q _flag_force
     ctrlc_require_binaries 'brew'; or return
 
-    set -g ctrlc_brew_prefix (brew --prefix)
+    set -U ctrlc_brew_prefix (brew --prefix)
+    set -U -x ARCHFLAGS "-arch x86_64"
+    set -U -x HOMEBREW_NO_ANALYTICS 1
   end
 
-  set -g -x ARCHFLAGS "-arch x86_64"
-  set -g -x HOMEBREW_NO_ANALYTICS 1
   ctrlc_prepend_unique -n 'PATH' -v "$ctrlc_brew_prefix/bin"
   ctrlc_prepend_unique -n 'PATH' -v "$ctrlc_brew_prefix/sbin"
 end
@@ -141,8 +141,8 @@ function ctrlc_config_python
   end
 
   set -l python_tools (ctrlc_detect_binaries 'python3 pip3' 'python pip'); or return
-  set -g ctrlc_python $python_tools[1]
-  set -g ctrlc_pip $python_tools[2]
+  set -U ctrlc_python $python_tools[1]
+  set -U ctrlc_pip $python_tools[2]
 end
 
 function ctrlc_config_virtualfish
@@ -153,7 +153,7 @@ function ctrlc_config_virtualfish
     ctrlc_require_vars 'ctrlc_python' 'ctrlc_pip'; or return
 
     set -l pip_package ($ctrlc_pip show virtualfish); or return
-    set -g ctrlc_virtualfish_config ($ctrlc_python -m virtualfish)
+    set -U ctrlc_virtualfish_config ($ctrlc_python -m virtualfish)
   end
 
   # initialize virtualfish
@@ -170,7 +170,7 @@ function ctrlc_config_powerline
 
     # detect package install root
     set -l pip_package ($ctrlc_pip show powerline-status); or return
-    set -g ctrlc_powerline_root (echo $pip_package[8] | string sub -s 11)
+    set -U ctrlc_powerline_root (echo $pip_package[8] | string sub -s 11)
   end
 
   # start the powerline daemon
@@ -246,4 +246,14 @@ function ctrlc_config
 end
 
 # initialize the shell
-ctrlc_config
+if not set -q ctrlc_module_cache
+  set -U ctrlc_module_cache 0
+end
+
+set -l last_boot (ctrlc_last_boot)
+if test $last_boot -gt $ctrlc_module_cache
+  printf "FB "
+  ctrlc_config -f && set -U ctrlc_module_cache $last_boot
+else
+  ctrlc_config
+end

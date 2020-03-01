@@ -70,6 +70,15 @@ function ctrlc_prepend_unique --description "Prepend a value to a list if not pr
   end
 end
 
+function ctrlc_remove_all --description "Remove all matching values from a list"
+  argparse 'n/variable=' 'v/value=' -- $argv; or return
+
+  while contains $_flag_value $$_flag_variable
+    set -l index (contains -i $_flag_value $$_flag_variable)
+    set -e "$_flag_variable"["$index"]
+  end
+end
+
 # environment configuration
 function ctrlc_config_bin
   argparse 'f/force' -- $argv; or return
@@ -175,7 +184,31 @@ function ctrlc_config_powerline
   powerline-setup
 end
 
+function ctrlc_module_enable
+  argparse 'm/module=' -- $argv; or return
+
+  if not contains $_flag_module $ctrlc_modules
+    printf "module $_flag_module is not valid" >&2
+    return 1
+  end
+
+  ctrlc_append_unique -n ctrlc_modules_enabled -v $_flag_module
+end
+
+function ctrlc_module_disable
+  argparse 'm/module=' -- $argv; or return
+
+  if not contains $_flag_module $ctrlc_modules
+    printf "module $_flag_module is not valid" >&2
+    return 1
+  end
+
+  ctrlc_remove_all -n ctrlc_modules_enabled -v $_flag_module
+end
+
 function ctrlc_config
+  argparse -i 'd/detect' -- $argv; or return
+
   # corner case: non-interactive shell
   if not status --is-interactive
     ctrlc_config_bin $argv; or return
@@ -183,9 +216,9 @@ function ctrlc_config
   end
 
   # determine available and enabled modules
-  set -g ctrlc_modules 'bin' 'editor' 'gpg' 'brew' 'python' 'virtualfish' 'powerline'
-  if not set -q ctrlc_modules_enabled
-    set -g ctrlc_modules_enabled $ctrlc_modules
+  set -g ctrlc_modules 'bin' 'editor' 'brew' 'git' 'gpg' 'python' 'virtualfish' 'powerline'
+  if not set -q ctrlc_modules_enabled || set -q _flag_detect
+    set -U ctrlc_modules_enabled $ctrlc_modules
   end
 
   # record start time
@@ -198,7 +231,9 @@ function ctrlc_config
       printf " +$module"
 
       set -l module_function "ctrlc_config_$module"
-      eval $module_function $argv; or return
+
+      eval $module_function $argv > /dev/null 2>&1
+      or ctrlc_module_disable -m $module && printf "!"
     else
       printf " -$module"
     end

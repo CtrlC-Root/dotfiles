@@ -1,141 +1,214 @@
-# record start time
-set -l ctrlc_env_start (date '+%s')
+# utilities
+function ctrlc_last_boot --description "Detect last boot as unix time"
+  switch (uname)
+  case "Linux"
+    set last_boot (last reboot | head -n 1 | sed -e 's/ \+/ /g' | cut -d ' ' -f5-8)
+    set unix_time (date -d $last_boot '+%s')
 
-# check if we need to update the cache
-set -l ctrlc_platform (uname)
-if test "$ctrlc_platform" = "Linux"
-  set ctrlc_last_boot (date -d (last reboot | head -n 1 | sed -e 's/ \+/ /g' | cut -d ' ' -f5-8) '+%s')
-else if test "$ctrlc_platform" = "Darwin"
-  set ctrlc_last_boot (date -jf '%a %b %d %H:%M' '+%s' (last reboot | head -n 1 | sed -e 's/  */ /g' | cut -d ' ' -f3-6))
-else
-  # force an update every time
-  echo "$ctrlc_platform unknown platform"
-  set ctrlc_last_boot (date '%+s')
+  case "Darwin"
+    set last_boot (last reboot | head -n 1 | sed -e 's/  */ /g' | cut -d ' ' -f3-6)
+    set unix_time (date -jf '%a %b %d %H:%M' '+%s' $last_boot)
+
+  case "*"
+    set unix_time 0
+  end
+
+  echo $unix_time
 end
 
-if ! set -q ctrlc_env_cache
-  set -U ctrlc_env_cache 0
+function ctrlc_detect_binaries --description "Detect first set of available binaries"
+  for binary_group in $argv
+    set -l binaries (echo $binary_group | string split " ")
+    set -l found
+
+    for binary in $binaries
+      if which $binary > /dev/null 2>&1
+        set found $found $binary
+      end
+    end
+
+    if test (count $found) -eq (count $binaries)
+      echo $binary_group | string split " "
+      return 0
+    end
+  end
+
+  return 1
 end
 
-if test "$ctrlc_last_boot" -gt "$ctrlc_env_cache"
-  set ctrlc_env_update "$ctrlc_last_boot"
-  set -U ctrlc_env_cache "$ctrlc_last_boot"
-end
-
-# detect preferred editor
-if set -q ctrlc_env_update
-  set -e EDITOR
-
-  set -l editors vim nano vi
-  for editor in $editors
-    if which $editor > /dev/null ^&1
-      set -U -x EDITOR $editor
-      break
+function ctrlc_require_binaries --description "Ensure binaries are available"
+  for binary in $argv
+    if not which $binary > /dev/null 2>&1
+      printf "binary $binary is not available" >&2
+      return 1
     end
   end
 end
 
-# configure git settings
-if test ! -f ~/.gitconfig
+function ctrlc_require_vars --description "Ensure variables are set"
+  for variable in $argv
+    if not set -q $variable
+      printf "$variable is not set" >&2
+      return 1
+    end
+  end
+end
+
+function ctrlc_append_unique --description "Append a value to a list if not present"
+  argparse 'n/variable=' 'v/value=' -- $argv; or return
+
+  if not contains $_flag_value $$_flag_variable
+    set $_flag_variable $$_flag_variable $_flag_value
+  end
+end
+
+function ctrlc_prepend_unique --description "Prepend a value to a list if not present"
+  argparse 'n/variable=' 'v/value=' -- $argv; or return
+
+  if not contains $_flag_value $$_flag_variable
+    set $_flag_variable $_flag_value $$_flag_variable
+  end
+end
+
+# environment configuration
+function ctrlc_config_bin
+  argparse 'f/force' -- $argv; or return
+
+  set -l bin_paths "$HOME/bin" "$HOME/.local/bin"
+  for bin_path in $bin_paths
+    if test -d $bin_path
+      ctrlc_append_unique -n 'PATH' -v $bin_path
+    end
+  end
+end
+
+function ctrlc_config_editor
+  argparse 'f/force' -- $argv; or return
+
+  if set -q EDITOR && not set -q _flag_force
+    return 0
+  end
+
+  set -g -x EDITOR (ctrlc_detect_binaries vim nano vi)
+end
+
+function ctrlc_config_brew --description "Homebrew"
+  argparse 'f/force' -- $argv; or return
+
+  if not set -q ctrlc_brew_prefix || set -q _flag_force
+    ctrlc_require_binaries 'brew'; or return
+
+    set -g ctrlc_brew_prefix (brew --prefix)
+  end
+
+  set -g -x ARCHFLAGS "-arch x86_64"
+  set -g -x HOMEBREW_NO_ANALYTICS 1
+  ctrlc_prepend_unique -n 'PATH' -v "$ctrlc_brew_prefix/bin"
+  ctrlc_prepend_unique -n 'PATH' -v "$ctrlc_brew_prefix/sbin"
+end
+
+function ctrlc_config_git
+  argparse 'f/force' -- $argv; or return
+
+  # TODO: test on ~/.gitconfig or individual settings?
   git config --global user.name "Alexandru Barbur"
-  git config --global user.email "root.ctrlc@gmail.com"
+  git config --global user.email "alex@ctrlc.name"
   git config --global push.default simple
   git config --global color.ui auto
 end
 
-# detect python tools
-if set -q ctrlc_env_update
-  set -e ctrlc_python
-  set -e ctrlc_pip
+function ctrlc_config_gpg
+  argparse 'f/force' -- $argv; or return
 
-  set -l python_tools 'python3 pip3' 'python2 pip2' 'python pip'
-  for tools in $python_tools
-    # locate toolset binaries
-    set -l binaries
-    for binary in (echo $tools | tr ' ' '\n')
-      if which $binary > /dev/null ^&1
-        set binaries $binaries $binary
-      end
-    end
-
-    # use this toolset if all binaries are available
-    if test (count $binaries) -ge 2
-      set -U ctrlc_python $binaries[1]
-      set -U ctrlc_pip $binaries[2]
-      break
-    end
-  end
-end
-
-# user binaries
-if test -d "$HOME/bin"
-  set -x PATH $PATH $HOME/bin
-end
-
-# local binaries
-if test -d "$HOME/.local/bin"
-  set -x PATH $PATH $HOME/.local/bin
-end
-
-# gpg
-if which gpg > /dev/null ^&1
   # https://stackoverflow.com/a/41054093
-  set -x GPG_TTY (tty)
+  set -g -x GPG_TTY (tty)
 end
 
-# virtualfish
-if set -q ctrlc_env_update
-  set -e ctrlc_enable_virtualfish
-  set -e ctrlc_virtualfish_config
+function ctrlc_config_python
+  argparse 'f/force' -- $argv; or return
 
-  if set -q ctrlc_python ctrlc_pip
-    if eval $ctrlc_pip show virtualfish > /dev/null
-      set -U ctrlc_enable_virtualfish "$ctrlc_last_boot"
-      set -U ctrlc_virtualfish_config (eval $ctrlc_python -m virtualfish)
-    end
+  if set -q ctrlc_python && set -q ctrlc_pip && not set -q _flag_force
+    return 0
   end
+
+  set -l python_tools (ctrlc_detect_binaries 'python3 pip3' 'python pip'); or return
+  set -g ctrlc_python $python_tools[1]
+  set -g ctrlc_pip $python_tools[2]
 end
 
-if set -q ctrlc_enable_virtualfish
+function ctrlc_config_virtualfish
+  argparse 'f/force' -- $argv; or return
+
+  # configure virtualfish
+  if not set -q ctrlc_virtualfish_config || set -q _flag_force
+    ctrlc_require_vars 'ctrlc_python' 'ctrlc_pip'; or return
+
+    set -l pip_package ($ctrlc_pip show virtualfish); or return
+    set -g ctrlc_virtualfish_config ($ctrlc_python -m virtualfish)
+  end
+
+  # initialize virtualfish
   eval $ctrlc_virtualfish_config
 end
 
-# brew
-if which brew > /dev/null ^&1
-  set -x ARCHFLAGS "-arch x86_64"
-  set -x PATH (brew --prefix)/bin (brew --prefix)/sbin $PATH
-  set -x HOMEBREW_NO_ANALYTICS 1
-end
+function ctrlc_config_powerline
+  argparse 'f/force' -- $argv; or return
 
-# golang
-set -x GOPATH $HOME/go
-if test -d "$GOPATH/bin"
-  set -x PATH $PATH $GOPATH/bin
-end
+  # configure powerline
+  if not set -q ctrlc_powerline_root || set -q _flag_force
+    ctrlc_require_vars 'ctrlc_python' 'ctrlc_pip'; or return
+    ctrlc_require_binaries 'powerline-daemon'; or return
 
-# powerline prompt
-if set -q ctrlc_env_update
-  set -e ctrlc_enable_powerline
-  set -e ctrlc_powerline_root
-
-  if set -q ctrlc_python ctrlc_pip
-    if eval $ctrlc_pip show powerline-status > /dev/null
-      set -U ctrlc_enable_powerline "$ctrlc_last_boot"
-      set -U ctrlc_powerline_root (eval $ctrlc_pip show powerline-status | awk '$1 == "Location:" { print $2; }')
-    end
+    # detect package install root
+    set -l pip_package ($ctrlc_pip show powerline-status); or return
+    set -g ctrlc_powerline_root (echo $pip_package[8] | string sub -s 11)
   end
-end
 
-if set -q ctrlc_enable_powerline
-  # start the daemon in the background
-  powerline-daemon -q
+  # start the powerline daemon
+  if not pgrep -f powerline-daemon > /dev/null
+    powerline-daemon -q
+  end
 
-  # configure the prompt
-  set fish_function_path $fish_function_path "$ctrlc_powerline_root/powerline/bindings/fish"
+  # initialize powerline
+  set -l powerline_bindings "$ctrlc_powerline_root/powerline/bindings/fish"
+  ctrlc_append_unique -n 'fish_function_path' -v $powerline_bindings
   powerline-setup
 end
 
-# record end time and display total load time
-set -l ctrlc_env_end (date '+%s')
-set -l ctrlc_env_delta (math "$ctrlc_env_end" - "$ctrlc_env_start")
-echo "load time $ctrlc_env_delta seconds"
+function ctrlc_config
+  # corner case: non-interactive shell
+  if not status --is-interactive
+    ctrlc_config_bin $argv; or return
+    return 0
+  end
+
+  # determine available and enabled modules
+  set -g ctrlc_modules 'bin' 'editor' 'gpg' 'brew' 'python' 'virtualfish' 'powerline'
+  if not set -q ctrlc_modules_enabled
+    set -g ctrlc_modules_enabled $ctrlc_modules
+  end
+
+  # record start time
+  set start_time (date '+%s')
+  printf "ENV:"
+
+  # configure modules
+  for module in $ctrlc_modules
+    if contains $module $ctrlc_modules_enabled
+      printf " +$module"
+
+      set -l module_function "ctrlc_config_$module"
+      eval $module_function $argv; or return
+    else
+      printf " -$module"
+    end
+  end
+
+  # record end time and display total load time in seconds
+  set end_time (date '+%s')
+  set load_time (math $end_time - $start_time)
+  printf " $load_time""s\n"
+end
+
+# initialize the shell
+ctrlc_config

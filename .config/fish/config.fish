@@ -153,7 +153,7 @@ function ctrlc_config_virtualfish
   if not set -q ctrlc_virtualfish_config || set -q _flag_force
     ctrlc_require_vars 'ctrlc_python' 'ctrlc_pip'; or return
 
-    set -l pip_package ($ctrlc_pip show virtualfish); or return
+    set -l pip_package ($ctrlc_pip show virtualfish 2> /dev/null); or return
     set -U ctrlc_virtualfish_config ($ctrlc_python -m virtualfish)
   end
 
@@ -170,7 +170,7 @@ function ctrlc_config_powerline
     ctrlc_require_binaries 'powerline-daemon'; or return
 
     # detect package install root
-    set -l pip_package ($ctrlc_pip show powerline-status); or return
+    set -l pip_package ($ctrlc_pip show powerline-status 2> /dev/null); or return
     set -U ctrlc_powerline_root (echo $pip_package[8] | string sub -s 11)
   end
 

@@ -123,6 +123,7 @@ function ctrlc_config_git
     git config --global user.name "Alexandru Barbur"
     git config --global user.email "alex@ctrlc.name"
     git config --global push.default simple
+    git config --global pull.rebase false
     git config --global color.ui auto
   end
 end
@@ -154,7 +155,14 @@ function ctrlc_config_virtualfish
     ctrlc_require_vars 'ctrlc_python' 'ctrlc_pip'; or return
 
     set -l pip_package ($ctrlc_pip show virtualfish 2> /dev/null); or return
-    set -U ctrlc_virtualfish_config ($ctrlc_python -m virtualfish)
+    set -l vf_version (echo $pip_package[2] | string sub -s 10)
+    set -l vf_root (echo $pip_package[8] | string sub -s 11)
+
+    set -l -a vf_config "set -g VIRTUALFISH_VERSION $vf_version"
+    set -l -a vf_config "set -g VIRTUALFISH_PYTHON_EXEC $ctrlc_python"
+    set -l -a vf_config "source $vf_root/virtualfish/virtual.fish"
+    set -l -a vf_config "emit virtualfish_did_setup_plugins"
+    set -U ctrlc_virtualfish_config (string join ";" $vf_config)
   end
 
   # initialize virtualfish

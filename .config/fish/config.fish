@@ -151,22 +151,20 @@ function ctrlc_config_virtualfish
   argparse 'f/force' -- $argv; or return
 
   # configure virtualfish
-  if not set -q ctrlc_virtualfish_config || set -q _flag_force
+  if not set -q ctrlc_virtualfish || set -q _flag_force
     ctrlc_require_vars 'ctrlc_python' 'ctrlc_pip'; or return
 
     set -l pip_package ($ctrlc_pip show virtualfish 2> /dev/null); or return
     set -l vf_version (echo $pip_package[2] | string sub -s 10)
     set -l vf_root (echo $pip_package[8] | string sub -s 11)
-
-    set -l -a vf_config "set -g VIRTUALFISH_VERSION $vf_version"
-    set -l -a vf_config "set -g VIRTUALFISH_PYTHON_EXEC $ctrlc_python"
-    set -l -a vf_config "source $vf_root/virtualfish/virtual.fish"
-    set -l -a vf_config "emit virtualfish_did_setup_plugins"
-    set -U ctrlc_virtualfish_config (string join ";" $vf_config)
+    set -U ctrlc_virtualfish $vf_version $ctrlc_python $vf_root
   end
 
   # initialize virtualfish
-  eval $ctrlc_virtualfish_config
+  set -g VIRTUALFISH_VERSION $ctrlc_virtualfish[1]
+  set -g VIRTUALFISH_PYTHON_EXEC (which $ctrlc_virtualfish[2])
+  source "$ctrlc_virtualfish[3]/virtualfish/virtual.fish"
+  emit virtualfish_did_setup_plugins
 end
 
 function ctrlc_config_powerline

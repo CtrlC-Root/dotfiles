@@ -110,6 +110,7 @@ function ctrlc_config_brew --description "Homebrew"
     set -U ctrlc_brew_prefix (brew --prefix)
     set -U -x ARCHFLAGS "-arch x86_64"
     set -U -x HOMEBREW_NO_ANALYTICS 1
+    set -U -x HOMEBREW_NO_AUTO_UPDATE 1
   end
 
   ctrlc_prepend_unique -n 'PATH' -v "$ctrlc_brew_prefix/bin"

@@ -5,6 +5,9 @@ if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
 fi
 
+# aliases
+alias ls='ls --color=auto'
+
 # detect preferred editor
 EDITORS='vim nano vi'
 for EDITOR in $EDITORS; do

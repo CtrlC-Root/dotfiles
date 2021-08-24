@@ -1,0 +1,78 @@
+#!/usr/bin/env python
+
+import re
+import json
+import argparse
+import fileinput
+
+
+def snake_case(value):
+    value = value.replace('-', '_')
+    value = re.sub(r'([A-Z]+)([A-Z][a-z])', r'\1_\2', value)
+    value = re.sub(r'([a-z\d])([A-Z])', r'\1_\2', value)
+    value = re.sub(r'\s+', r'_', value)
+    return value.lower()
+
+
+def main():
+    # parse command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'files',
+        metavar='FILE',
+        type=str,
+        nargs='*',
+        default='-',
+        help='files to process or - for stdin')
+
+    args = parser.parse_args()
+
+    # parse input files and streams
+    columns = []
+    entries = {}
+
+    for line in fileinput.input(files=args.files):
+        # parse table headers on first line
+        if fileinput.isfirstline():
+            # extract column titles and spans
+            columns = []
+            matches = list(re.finditer(r"\w+( \w+)*", line))
+            for m1, m2 in zip(matches, matches[1:] + [None]):
+                name = snake_case(m1.group())
+                start = m1.start()
+                end = m2.start() if m2 else None
+
+                columns.append((name, start, end))
+
+            # warn user and skip processing files where we can't extract any headers
+            if not columns:
+                print(f"failed to parse headers for input: {fileinput.filename()}", file=sys.stderr)
+                fileinput.nextfile()
+
+            # process the next line
+            continue
+
+        # skip lines that look like row delimiters
+        if len(set(line.strip())) <= 1:
+            continue
+
+        # extract column values from the line
+        values = {c[0]: line[c[1]:c[2]].strip() for c in columns}
+
+        # accumulate values for this file
+        entry = "-" if fileinput.isstdin() else fileinput.filename()
+        entries.setdefault(entry, [])
+        entries[entry].append(values)
+
+    # print entries for single file
+    if len(entries.keys()) == 1:
+        first_key = list(entries.keys())[0]
+        print(json.dumps(entries[first_key], indent=2))
+
+    # print entries per input file
+    else:
+        print(json.dumps(entries, indent=2))
+
+
+if __name__ == '__main__':
+    main()

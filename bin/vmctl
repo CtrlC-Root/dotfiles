@@ -1,0 +1,190 @@
+#!/usr/bin/env python
+
+import sys
+import time
+import argparse
+import subprocess
+
+
+def domain_state(name):
+    result = subprocess.run(
+        ['virsh', 'dominfo', name],
+        capture_output=True,
+        encoding='utf-8',
+        check=True)
+
+    dominfo = dict(map(
+        lambda t: (t[0].lower(), t[1].strip()),
+        (line.split(':')[:2] for line in result.stdout.splitlines() if line.strip())))
+
+    return dominfo['state']
+
+
+def domain_start(name):
+    subprocess.run(
+        ['virsh', 'start', name],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True)
+
+
+def domain_stop(name):
+    subprocess.run(
+        ['virsh', 'shutdown', name, '--mode', 'acpi'],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True)
+
+
+def domain_interface_address(name, protocol):
+    result = subprocess.run(
+        ['virsh', 'domifaddr', name],
+        capture_output=True,
+        encoding='utf-8',
+        check=True)
+
+    entries = [
+        tuple(line.split())
+        for line in result.stdout.splitlines()[2:]
+        if line.strip()]
+
+    for entry in entries:
+        if entry[2] == protocol:
+            return entry[3].rsplit('/', maxsplit=1)[0]
+
+    return None
+
+
+def ssh_ping(ip_address):
+    result = subprocess.run(
+        ['ssh', '-o', 'ConnectTimeout=1', '-q', ip_address, 'exit'],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)
+
+    return (result.returncode == 0)
+
+
+def gio_mount(remote_uri):
+    subprocess.run(
+        ['gio', 'mount', remote_uri],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True)
+
+
+def gio_local_path(remote_uri):
+    result = subprocess.run(
+        ['gio', 'info', remote_uri],
+        capture_output=True,
+        encoding='utf-8')
+
+    if result.returncode != 0:
+        return None
+
+    entries = [
+        tuple(line.split(':', maxsplit=1))
+        for line in result.stdout.splitlines()
+        if line.strip() and not (line.startswith(' ') or line.endswith(':'))]
+
+    info = dict(map(lambda t: (t[0], t[1].strip()), entries))
+    return info['local path']
+
+
+def gio_unmount(remote_uri):
+    subprocess.run(
+        ['gio', 'mount', '-u', remote_uri],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=True)
+
+
+def start(name):
+    print('Start domain...')
+    domain_start(name)
+
+    print('Wait for IPv4 address...', end='')
+    sys.stdout.flush()
+
+    while True:
+        time.sleep(1)
+        ip_address = domain_interface_address(name, 'ipv4')
+        if ip_address:
+            print(f' ({ip_address})')
+            break
+
+        print('.', end='')
+        sys.stdout.flush()
+
+    print('Wait for SSH...', end='')
+    sys.stdout.flush()
+
+    while True:
+        time.sleep(3)
+        if ssh_ping(ip_address):
+            print('')
+            break
+
+        print('.', end='')
+        sys.stdout.flush()
+
+    print('Mount home folder... ', end='')
+    sys.stdout.flush()
+
+    sftp_uri = f'sftp://{ip_address}/'
+    gio_mount(sftp_uri)
+    local_path = gio_local_path(sftp_uri)
+    print(f' ({local_path})')
+
+
+def stop(name):
+    ip_address = domain_interface_address(name, 'ipv4')
+    if not ip_address:
+        raise RuntimeError('domain does not have an IPv4 address')
+
+    sftp_uri = f'sftp://{ip_address}/'
+    local_path = gio_local_path(sftp_uri)
+    if local_path:
+        print('Unmount home folder...')
+        gio_unmount(sftp_uri)
+
+    print('Stop domain...', end='')
+    sys.stdout.flush()
+    domain_stop(name)
+
+    while True:
+        time.sleep(1)
+        if domain_state(name) == 'shut off':
+            print('')
+            break
+
+        print('.', end='')
+        sys.stdout.flush()
+
+
+def main():
+    # parse command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'command',
+        type=str,
+        choices=['start', 'stop'],
+        help='command')
+
+    parser.add_argument(
+        'name',
+        type=str,
+        help='domain name')
+
+    args = parser.parse_args()
+
+    # decide what to do based on the current state
+    current_state = domain_state(args.name)
+    if args.command == 'start' and current_state == 'shut off':
+        start(args.name)
+
+    elif args.command == 'stop' and current_state == 'running':
+        stop(args.name)
+
+
+if __name__ == '__main__':
+    main()

@@ -42,8 +42,8 @@ def gio_local_path(remote_uri):
 
     info = dict(map(lambda t: (t[0], t[1].strip()), entries))
     return info['local path']
- 
- 
+
+
 def main():
     # parse command line arguments
     parser = argparse.ArgumentParser()
@@ -68,7 +68,7 @@ def main():
         help='relative path')
 
     args = parser.parse_args()
-    
+
     # create an output buffer to store log messages if we want to be quiet
     output_buffer = io.StringIO()
     if not args.verbose:
@@ -78,14 +78,14 @@ def main():
     try:
         # detect the domain's ip address
         print('Detect IPv4 address... ', end='')
-    
+
         ip_address = domain_interface_address(args.name, 'ipv4')
         if not ip_address:
             print('Failed')
             raise RuntimeError('Failed to detect IPv4 address')
-    
+
         print(f' ({ip_address})')
-    
+
         # detect the local path to the sftp mount
         print('Detect local path... ', end='')
         sftp_uri = f'sftp://{ip_address}/'
@@ -93,9 +93,9 @@ def main():
         if not local_path:
             print('Failed')
             raise RuntimeError('Failed to detect local path')
-            
+
         print(f' ({local_path})')
-    
+
         # determine the full target path
         domain_path = Path(args.path).relative_to('/')
         target_path = Path(local_path, domain_path)
@@ -116,13 +116,14 @@ def main():
     # only print the target path
     if args.verbose:
         print('')
-    
+
     if args.uri:
         print(target_path.as_uri())
-        
+
     else:
         print(target_path)
 
 
 if __name__ == '__main__':
     main()
+

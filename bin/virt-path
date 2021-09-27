@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+
+import io
+import sys
+import argparse
+import subprocess
+from pathlib import Path
+
+
+def domain_interface_address(name, protocol):
+    result = subprocess.run(
+        ['virsh', 'domifaddr', name],
+        capture_output=True,
+        encoding='utf-8',
+        check=True)
+
+    entries = [
+        tuple(line.split())
+        for line in result.stdout.splitlines()[2:]
+        if line.strip()]
+
+    for entry in entries:
+        if entry[2] == protocol:
+            return entry[3].rsplit('/', maxsplit=1)[0]
+
+    return None
+
+
+def gio_local_path(remote_uri):
+    result = subprocess.run(
+        ['gio', 'info', remote_uri],
+        capture_output=True,
+        encoding='utf-8')
+
+    if result.returncode != 0:
+        return None
+
+    entries = [
+        tuple(line.split(':', maxsplit=1))
+        for line in result.stdout.splitlines()
+        if line.strip() and not (line.startswith(' ') or line.endswith(':'))]
+
+    info = dict(map(lambda t: (t[0], t[1].strip()), entries))
+    return info['local path']
+ 
+ 
+def main():
+    # parse command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='verbose output')
+
+    parser.add_argument(
+        '-u', '--uri',
+        action='store_true',
+        help='print target path as a URI')
+
+    parser.add_argument(
+        'name',
+        type=str,
+        help='domain name')
+
+    parser.add_argument(
+        'path',
+        type=str,
+        help='relative path')
+
+    args = parser.parse_args()
+    
+    # create an output buffer to store log messages if we want to be quiet
+    output_buffer = io.StringIO()
+    if not args.verbose:
+        sys.stdout = output_buffer
+        sys.stderr = output_buffer
+
+    try:
+        # detect the domain's ip address
+        print('Detect IPv4 address... ', end='')
+    
+        ip_address = domain_interface_address(args.name, 'ipv4')
+        if not ip_address:
+            print('Failed')
+            raise RuntimeError('Failed to detect IPv4 address')
+    
+        print(f' ({ip_address})')
+    
+        # detect the local path to the sftp mount
+        print('Detect local path... ', end='')
+        sftp_uri = f'sftp://{ip_address}/'
+        local_path = gio_local_path(sftp_uri)
+        if not local_path:
+            print('Failed')
+            raise RuntimeError('Failed to detect local path')
+            
+        print(f' ({local_path})')
+    
+        # determine the full target path
+        domain_path = Path(args.path).relative_to('/')
+        target_path = Path(local_path, domain_path)
+
+    except:
+        # print the output buffer to stderr if it's not empty
+        if output_buffer.tell() > 0:
+            print(output_buffer.getvalue(), file=sys.__stderr__)
+
+        # quit with an appropriate exit code
+        sys.exit(1)
+
+    finally:
+        # restore output streams
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+    # only print the target path
+    if args.verbose:
+        print('')
+    
+    if args.uri:
+        print(target_path.as_uri())
+        
+    else:
+        print(target_path)
+
+
+if __name__ == '__main__':
+    main()

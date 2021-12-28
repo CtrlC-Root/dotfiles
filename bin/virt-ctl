@@ -53,9 +53,6 @@ def domain_interface_addresses(name, protocol):
         if entry[2] == protocol:
             cidr_addresses.append(entry[3])
 
-    if not cidr_addresses:
-        return None
-
     return [
         cidr_address.rsplit('/', maxsplit=1)[0]
         for cidr_address in cidr_addresses]

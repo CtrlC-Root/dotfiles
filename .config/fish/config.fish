@@ -2,8 +2,14 @@
 function ctrlc_last_boot --description "Detect last boot as unix time"
   switch (uname)
   case "Linux"
-    set last_boot (last reboot | head -n 1 | sed -e 's/ \+/ /g' | cut -d ' ' -f5-8)
-    set unix_time (date -d $last_boot '+%s')
+    if uname -v | grep 'Alpine' > /dev/null 2>&1
+        set uptime_seconds (cat /proc/uptime | cut -d' ' -f1 | cut -d'.' -f1)
+        set current_seconds (date '+%s')
+        set unix_time (math "$current_seconds - $uptime_seconds")
+    else
+        set last_boot (last reboot | head -n 1 | sed -e 's/ \+/ /g' | cut -d ' ' -f5-8)
+        set unix_time (date -d $last_boot '+%s')
+    end
 
   case "Darwin"
     set last_boot (last reboot | head -n 1 | sed -e 's/  */ /g' | cut -d ' ' -f3-6)

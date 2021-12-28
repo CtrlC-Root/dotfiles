@@ -36,9 +36,9 @@ def domain_stop(name):
         check=True)
 
 
-def domain_interface_address(name, protocol):
+def domain_interface_addresses(name, protocol):
     result = subprocess.run(
-        ['virsh', 'domifaddr', name],
+        ['virsh', 'domifaddr', name, '--full'],
         capture_output=True,
         encoding='utf-8',
         check=True)
@@ -48,11 +48,17 @@ def domain_interface_address(name, protocol):
         for line in result.stdout.splitlines()[2:]
         if line.strip()]
 
+    cidr_addresses = []
     for entry in entries:
         if entry[2] == protocol:
-            return entry[3].rsplit('/', maxsplit=1)[0]
+            cidr_addresses.append(entry[3])
 
-    return None
+    if not cidr_addresses:
+        return None
+
+    return [
+        cidr_address.rsplit('/', maxsplit=1)[0]
+        for cidr_address in cidr_addresses]
 
 
 def ssh_ping(ip_address):
@@ -62,6 +68,15 @@ def ssh_ping(ip_address):
         stderr=subprocess.DEVNULL)
 
     return (result.returncode == 0)
+
+
+def domain_ssh_address(name):
+    addresses = domain_interface_addresses(name, 'ipv4')
+    for address in addresses:
+        if ssh_ping(address):
+            return address
+
+    return None
 
 
 def gio_mount(remote_uri):
@@ -102,26 +117,15 @@ def start(name):
     print('Start domain...')
     domain_start(name)
 
-    print('Wait for IPv4 address...', end='')
+    print('Wait for IPv4 address with SSH access...', end='')
     sys.stdout.flush()
+    time.sleep(1)
 
     while True:
         time.sleep(1)
-        ip_address = domain_interface_address(name, 'ipv4')
+        ip_address = domain_ssh_address(name)
         if ip_address:
             print(f' ({ip_address})')
-            break
-
-        print('.', end='')
-        sys.stdout.flush()
-
-    print('Wait for SSH...', end='')
-    sys.stdout.flush()
-
-    while True:
-        time.sleep(3)
-        if ssh_ping(ip_address):
-            print('')
             break
 
         print('.', end='')
@@ -137,9 +141,9 @@ def start(name):
 
 
 def stop(name):
-    ip_address = domain_interface_address(name, 'ipv4')
+    ip_address = domain_ssh_address(name)
     if not ip_address:
-        raise RuntimeError('domain does not have an IPv4 address')
+        raise RuntimeError('domain does not have an IPv4 address with SSH access')
 
     sftp_uri = f'sftp://{ip_address}/'
     local_path = gio_local_path(sftp_uri)

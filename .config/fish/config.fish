@@ -2,6 +2,8 @@
 function ctrlc_last_boot --description "Detect last boot as unix time"
   switch (uname)
   case "Linux"
+    # alpine linux does not have usable utmp or wtmp files
+    # https://serverfault.com/a/1050097
     if uname -v | grep 'Alpine' > /dev/null 2>&1
         set uptime_seconds (cat /proc/uptime | cut -d' ' -f1 | cut -d'.' -f1)
         set current_seconds (date '+%s')
